@@ -1,0 +1,10 @@
+FROM jambonz/sbc-outbound:latest
+
+# Fix pino compatibility issue with Node.js 18
+# The issue is that pino 8.x doesn't support Node.js 18's diagnostic channels
+# We'll patch the pino source code to handle the missing tracingChannel method
+RUN cd /opt/app/node_modules/pino/lib && \
+    sed -i "s/const asJsonChan = diagChan.tracingChannel('pino_asJson')/const asJsonChan = diagChan.tracingChannel ? diagChan.tracingChannel('pino_asJson') : null/" tools.js && \
+    sed -i "s/if (asJsonChan.hasSubscribers === false)/if (asJsonChan \&\& asJsonChan.hasSubscribers === false)/" tools.js && \
+    sed -i "s/return asJsonChan.traceSync(_asJson, store, this, obj, msg, num, time)/return asJsonChan ? asJsonChan.traceSync(_asJson, store, this, obj, msg, num, time) : _asJson.call(this, obj, msg, num, time)/" tools.js
+

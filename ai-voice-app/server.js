@@ -29,17 +29,18 @@ const activeCalls = new Map();
  */
 app.post('/webhook/call-initiated', (req, res) => {
   const { call_sid, from, to } = req.body;
-  
+
   console.log(`📞 Call initiated: ${call_sid}`);
   console.log(`   From: ${from}, To: ${to}`);
-  
+
   // Store call info
   activeCalls.set(call_sid, {
     call_sid,
     from,
     to,
     startTime: new Date(),
-    messages: []
+    messages: [],
+    greetingSentAt: new Date().toISOString()
   });
 
   // Return initial greeting
@@ -52,6 +53,21 @@ app.post('/webhook/call-initiated', (req, res) => {
       voice: 'en-US-Standard-C'
     }
   };
+
+  // Log greeting message
+  console.log(`🎤 FIRST GREETING MESSAGE SENT`);
+  console.log(JSON.stringify({
+    callSid: call_sid,
+    from,
+    to,
+    greetingText: greeting.text,
+    vendor: greeting.synthesizer.vendor,
+    language: greeting.synthesizer.language,
+    voice: greeting.synthesizer.voice,
+    server: 'api-server-webhook',
+    timestamp: new Date().toISOString(),
+    source: 'call-initiated-webhook'
+  }, null, 2));
 
   res.json([greeting, {
     verb: 'gather',
